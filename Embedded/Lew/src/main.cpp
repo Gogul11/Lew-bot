@@ -1,165 +1,196 @@
-#include <Arduino.h> 
-#include <WiFi.h> 
-#include <HTTPClient.h> 
-#include <BLEDevice.h> 
-#include <BLEServer.h> 
-#include <BLEUtils.h> 
-#include "esp_gap_ble_api.h" 
-#include "esp_bt.h" 
+#include <Arduino.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
-BLEServer* pServer; 
-bool deviceConnected = false; 
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include "esp_gap_ble_api.h"
+#include "esp_bt.h"
 
-const char* ssid = "Coconut Biscuit"; 
-const char* password = "headphones"; 
+BLEServer* pServer;
+bool deviceConnected = false;
 
-esp_bd_addr_t remoteDeviceAddress; 
+const char* ssid = "Internet";
+const char* password = "qwerty1234";
 
-String receivedData = ""; 
-bool dataReceived = false; 
-bool isDeviceVerified = false; 
+esp_bd_addr_t remoteDeviceAddress;
 
-int pins_op[6] = {13, 14, 15, 16, 17, 18}; 
+String receivedData = "";
+bool dataReceived = false;
+bool isDeviceVerified = false;
+
+int pins_op[6] = {13, 14, 15, 16, 17, 18};
+int motor_pins[2] = {19, 21};
 
 class ServerConnectionCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t *param) { 
-        deviceConnected = true; 
-        memcpy(remoteDeviceAddress, param->connect.remote_bda, 6); 
-        Serial.println("Device connected via BLE"); 
-    } 
 
-    void onDisconnect(BLEServer* pServer) { 
-        deviceConnected = false; 
-        isDeviceVerified = false; 
-        Serial.println("Device disconnected"); 
-        Serial.println("To Access the Lew Send retrying the Codes"); 
-        BLEDevice::startAdvertising(); 
-        digitalWrite(pins_op[4], HIGH); 
-    } 
-}; 
+  void onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t *param) {
+    deviceConnected = true;
 
-class ServerWriteCallbacks : public BLECharacteristicCallbacks { 
-    void onWrite(BLECharacteristic *pCharacteristic) { 
-        std::string value = pCharacteristic->getValue(); 
-        if (value.length() > 0) { 
-            receivedData = String(value.c_str()); 
-            dataReceived = true; 
-            Serial.print("Received via BLE: "); 
-            Serial.println(receivedData); 
-        } 
-    } 
-}; 
+    memcpy(remoteDeviceAddress, param->connect.remote_bda, 6);
+    Serial.println("Device connected via BLE");
+  }
 
-void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) { 
-    if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) { 
-        Serial.print("RSSI: "); 
-        Serial.println(param->read_rssi_cmpl.rssi); 
-    } 
-} 
+  void onDisconnect(BLEServer* pServer) {
+    deviceConnected = false;
+    isDeviceVerified = false;
 
-void setupWiFi() { 
-    WiFi.mode(WIFI_STA); 
-    WiFi.begin(ssid, password); 
+    Serial.println("Device disconnected");
+    Serial.println("To Access the Lew Send retrying the Codes");
 
-    Serial.printf("%s Wifi - Connecting..\n", ssid); 
+    BLEDevice::startAdvertising();
+    // digitalWrite(pins_op[4], HIGH);
+  }
+};
 
-    while (WiFi.status() != WL_CONNECTED) { 
-        delay(500); 
-        Serial.print("."); 
-    } 
+class ServerWriteCallbacks : public BLECharacteristicCallbacks {
 
-    Serial.println("\n Connected!"); 
-    Serial.print("IP Address: "); 
-    Serial.println(WiFi.localIP()); 
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    std::string value = pCharacteristic->getValue();
 
-    digitalWrite(pins_op[0], HIGH); 
-} 
+    if (value.length() > 0) {
+      receivedData = String(value.c_str());
+      dataReceived = true;
 
-void setupBLE() { 
-    BLEDevice::init("Lew-1"); 
-    BLEDevice::setCustomGapHandler(gapCallback); 
+      Serial.print("Received via BLE: ");
+      Serial.println(receivedData);
+    }
+  }
+};
 
-    pServer = BLEDevice::createServer(); 
-    pServer->setCallbacks(new ServerConnectionCallbacks()); 
+void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
 
-    BLEService *pService = pServer->createService("1234"); 
+  if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) {
+    Serial.print("RSSI: ");
+    Serial.println(param->read_rssi_cmpl.rssi);
 
-    BLECharacteristic *pCharacteristic = pService->createCharacteristic(
-        "abcd", 
-        BLECharacteristic::PROPERTY_WRITE
-    ); 
+    int rssi = param->read_rssi_cmpl.rssi;
 
-    pCharacteristic->setCallbacks(new ServerWriteCallbacks()); 
+    if (rssi >= -40) {
+      digitalWrite(motor_pins[0], LOW);
+      digitalWrite(motor_pins[1], LOW);
+    } else {
+      digitalWrite(motor_pins[0], HIGH);
+      digitalWrite(motor_pins[1], HIGH);
+    }
+  }
+}
 
-    pService->start(); 
-    BLEDevice::startAdvertising(); 
+void setupWiFi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
 
-    Serial.println("BLE Ready. Waiting for data..."); 
-    digitalWrite(pins_op[1], HIGH); 
-} 
+  Serial.printf("%s Wifi - Connecting..\n", ssid);
 
-void sendToServer(String jsonData) { 
-    if (WiFi.status() == WL_CONNECTED) { 
-        HTTPClient http; 
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-        http.begin("http://10.16.32.194:5000/bots/verifyBot"); 
-        http.addHeader("Content-Type", "application/json"); 
+  Serial.println("\n Connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
 
-        int httpResponseCode = http.POST(jsonData); 
+  // digitalWrite(pins_op[0], HIGH);
+}
 
-        Serial.print("Response code: "); 
-        Serial.println(httpResponseCode); 
+void setupBLE() {
+  BLEDevice::init("Lew-1");
+  BLEDevice::setCustomGapHandler(gapCallback);
 
-        if (httpResponseCode > 0) { 
-            String payload = http.getString(); 
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new ServerConnectionCallbacks());
 
-            Serial.println("Response:"); 
-            Serial.println(payload); 
+  BLEService *pService = pServer->createService("1234");
 
-            if (payload == "1") { 
-                isDeviceVerified = true; 
-                digitalWrite(pins_op[2], HIGH); 
-                digitalWrite(pins_op[3], LOW); 
-            } else { 
-                digitalWrite(pins_op[3], HIGH); 
-                digitalWrite(pins_op[2], LOW); 
-            } 
-        } else { 
-            Serial.print("HTTP Error: "); 
-            Serial.println(httpResponseCode); 
-            digitalWrite(pins_op[3], HIGH); 
-            digitalWrite(pins_op[2], LOW); 
-        } 
+  BLECharacteristic *pCharacteristic = pService->createCharacteristic(
+    "abcd",
+    BLECharacteristic::PROPERTY_WRITE
+  );
 
-        http.end(); 
-    } 
-} 
+  pCharacteristic->setCallbacks(new ServerWriteCallbacks());
+
+  pService->start();
+  BLEDevice::startAdvertising();
+
+  Serial.println("BLE Ready. Waiting for data...");
+  // digitalWrite(pins_op[1], HIGH);
+}
+
+void sendToServer(String jsonData) {
+
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+
+    http.begin("http://10.16.34.176:5000/bots/verifyBot");
+    http.addHeader("Content-Type", "application/json");
+
+    int httpResponseCode = http.POST(jsonData);
+
+    Serial.print("Response code: ");
+    Serial.println(httpResponseCode);
+
+    if (httpResponseCode > 0) {
+      String payload = http.getString();
+
+      Serial.println("Response:");
+      Serial.println(payload);
+
+      if (payload == "1") {
+        isDeviceVerified = true;
+        // digitalWrite(pins_op[2], HIGH);
+        // digitalWrite(pins_op[3], LOW);
+      } else {
+        // digitalWrite(pins_op[3], HIGH);
+        // digitalWrite(pins_op[2], LOW);
+      }
+
+    } else {
+      Serial.print("HTTP Error: ");
+      Serial.println(httpResponseCode);
+
+      // digitalWrite(pins_op[3], HIGH);
+      // digitalWrite(pins_op[2], LOW);
+    }
+
+    http.end();
+  }
+}
 
 // Wifi, BLE Server started, Verified, Verification Error, Disconnected, Ready to pair
 
-void setup() { 
-    Serial.begin(115200); 
+void setup() {
+  Serial.begin(115200);
 
-    for (int i = 0; i < 6; i++) { 
-        pinMode(pins_op[i], OUTPUT); 
-    } 
+  esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 
-    esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT); 
+  for (int i = 0; i < 2; i++) {
+    pinMode(motor_pins[i], OUTPUT);
+  }
 
-    setupWiFi(); 
-    setupBLE(); 
-} 
+  pinMode(13, OUTPUT);
 
-void loop() { 
-    if (dataReceived) { 
-        Serial.println("Sending data to server..."); 
-        sendToServer(receivedData); 
-        dataReceived = false; 
-    } 
-
-    if (isDeviceVerified) { 
-        esp_ble_gap_read_rssi(remoteDeviceAddress); 
-    } 
-
-    delay(1000); 
+  setupWiFi();
+  setupBLE();
 }
+
+void loop() {
+
+  digitalWrite(13, HIGH);
+
+  if (dataReceived) {
+    Serial.println("Sending data to server...");
+    sendToServer(receivedData);
+
+    dataReceived = false;
+  }
+
+  if (isDeviceVerified) {
+    esp_ble_gap_read_rssi(remoteDeviceAddress);
+  }
+
+  delay(1000);
+}
+
+// {"device_id":"Lew-451a4279-a590-4a58-82bd-3c96adfd20a8","user_id":"69bee6eddc5b13efee73427b","token":"ce9dcd3e19a5e4eea320201a3d72e8272e4e68fbc7bc304a9d567272ef0b7d04"}
