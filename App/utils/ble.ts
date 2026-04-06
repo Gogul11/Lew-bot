@@ -4,6 +4,7 @@ import { BleManager, Device, State } from "react-native-ble-plx";
 const LEW_DEVICE_NAME = "Lew-1";
 const LEW_SERVICE_UUID = "1234";
 const LEW_CHARACTERISTIC_UUID = "abcd";
+const LEW_MOVEMENT_CHARACTERISTIC_UUID = "ef12";
 const SCAN_TIMEOUT_MS = 15000;
 const POST_WRITE_CONNECTION_HOLD_MS = 3000;
 
@@ -182,6 +183,26 @@ export const bleUtils = {
     } catch (error) {
       throw error;
     }
+  },
+
+  async sendMovementCommand(isMoving: boolean) {
+    if (!activeDevice) {
+      throw new Error("Pair the Lew device first before sending movement updates.");
+    }
+
+    const isStillConnected = await activeDevice.isConnected();
+    if (!isStillConnected) {
+      await bleUtils.disconnectLewDevice();
+      throw new Error("Lew is no longer connected. Pair it again to resume movement updates.");
+    }
+
+    await activeDevice.writeCharacteristicWithResponseForService(
+      LEW_SERVICE_UUID,
+      LEW_MOVEMENT_CHARACTERISTIC_UUID,
+      toBase64(isMoving ? "1" : "0")
+    );
+
+    return activeDevice;
   },
 
   async disconnectLewDevice() {

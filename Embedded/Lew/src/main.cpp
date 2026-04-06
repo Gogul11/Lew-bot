@@ -19,6 +19,7 @@ esp_bd_addr_t remoteDeviceAddress;
 String receivedData = "";
 bool dataReceived = false;
 bool isDeviceVerified = false;
+bool isMoving = false;
 
 int pins_op[6] = {27, 26, 25, 33, 32, 35};
 int motor_pins[4] = {19, 21, 22, 23};
@@ -65,6 +66,27 @@ class ServerWriteCallbacks : public BLECharacteristicCallbacks {
   }
 };
 
+class movingUserCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    std::string value = pCharacteristic->getValue();
+
+    if (value.length() > 0) {
+
+      String data = String(value.c_str());
+
+      Serial.print("Movement Command: ");
+      Serial.println(data);
+
+      if (data == "1") {
+        isMoving = true;
+      } 
+      else if (data == "0") {
+        isMoving = false;
+      }
+    }
+  }
+};
+
 void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
 
   if (event == ESP_GAP_BLE_READ_RSSI_COMPLETE_EVT) {
@@ -80,8 +102,13 @@ void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
     Serial.println(speed);
 
     // Apply speed
-    ledcWrite(pwmChannel1, speed);
-    ledcWrite(pwmChannel2, speed);
+    if (!isMoving) {
+      ledcWrite(pwmChannel1, speed);
+      ledcWrite(pwmChannel2, speed);
+    } else {
+      ledcWrite(pwmChannel1, 0);
+      ledcWrite(pwmChannel2, 0);
+    }
   }
 }
 
@@ -116,9 +143,16 @@ void setupBLE() {
     "abcd",
     BLECharacteristic::PROPERTY_WRITE
   );
-
+  
   pCharacteristic->setCallbacks(new ServerWriteCallbacks());
+  
+  BLECharacteristic *pCharacteristic2 = pService->createCharacteristic(
+    "ef12",
+    BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY
+  );
 
+  pCharacteristic2->setCallbacks(new movingUserCallbacks());
+  
   pService->start();
   BLEDevice::startAdvertising();
 
