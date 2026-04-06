@@ -27,6 +27,8 @@ export type ReleaseBotResponse = ApiResponse;
 export type StoredBotDetails = {
   scannedBotId: string;
   scannedAt: string;
+  bookedAt?: string;
   pairedAt?: string;
+  verifiedAt?: string;
   bookingData: BotRecord | null;
 };

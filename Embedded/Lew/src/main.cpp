@@ -20,8 +20,14 @@ String receivedData = "";
 bool dataReceived = false;
 bool isDeviceVerified = false;
 
-int pins_op[6] = {13, 14, 15, 16, 17, 18};
-int motor_pins[2] = {19, 21};
+int pins_op[6] = {27, 26, 25, 33, 32, 35};
+int motor_pins[4] = {19, 21, 22, 23};
+int en_pins[2] = {2, 4};
+
+const int pwmChannel1 = 0;
+const int pwmChannel2 = 1;
+const int freq = 5000;
+const int resolution = 8;
 
 class ServerConnectionCallbacks : public BLEServerCallbacks {
 
@@ -67,13 +73,15 @@ void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
 
     int rssi = param->read_rssi_cmpl.rssi;
 
-    if (rssi >= -40) {
-      digitalWrite(motor_pins[0], LOW);
-      digitalWrite(motor_pins[1], LOW);
-    } else {
-      digitalWrite(motor_pins[0], HIGH);
-      digitalWrite(motor_pins[1], HIGH);
-    }
+    int speed = map(rssi, -90, -40, 200, 100);
+    speed = constrain(speed, 0, 255);
+
+    Serial.print("Speed: ");
+    Serial.println(speed);
+
+    // Apply speed
+    ledcWrite(pwmChannel1, speed);
+    ledcWrite(pwmChannel2, speed);
   }
 }
 
@@ -92,7 +100,7 @@ void setupWiFi() {
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
 
-  // digitalWrite(pins_op[0], HIGH);
+  digitalWrite(pins_op[0], HIGH);
 }
 
 void setupBLE() {
@@ -115,7 +123,7 @@ void setupBLE() {
   BLEDevice::startAdvertising();
 
   Serial.println("BLE Ready. Waiting for data...");
-  // digitalWrite(pins_op[1], HIGH);
+  digitalWrite(pins_op[1], HIGH);
 }
 
 void sendToServer(String jsonData) {
@@ -139,10 +147,10 @@ void sendToServer(String jsonData) {
 
       if (payload == "1") {
         isDeviceVerified = true;
-        // digitalWrite(pins_op[2], HIGH);
+        digitalWrite(pins_op[2], HIGH);
         // digitalWrite(pins_op[3], LOW);
       } else {
-        // digitalWrite(pins_op[3], HIGH);
+        digitalWrite(pins_op[3], HIGH);
         // digitalWrite(pins_op[2], LOW);
       }
 
@@ -150,7 +158,7 @@ void sendToServer(String jsonData) {
       Serial.print("HTTP Error: ");
       Serial.println(httpResponseCode);
 
-      // digitalWrite(pins_op[3], HIGH);
+      digitalWrite(pins_op[3], HIGH);
       // digitalWrite(pins_op[2], LOW);
     }
 
@@ -165,14 +173,33 @@ void setup() {
 
   esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 4; i++) {
     pinMode(motor_pins[i], OUTPUT);
   }
+
+  for (int i = 0; i < 6; i++) {
+    pinMode(pins_op[i], OUTPUT);
+  }
+
+    // Motor A
+  digitalWrite(motor_pins[0], HIGH);
+  digitalWrite(motor_pins[1], LOW);
+
+  // Motor B
+  digitalWrite(motor_pins[2], HIGH);
+  digitalWrite(motor_pins[3], LOW);
+
+  ledcSetup(pwmChannel1, freq, resolution);
+  ledcSetup(pwmChannel2, freq, resolution);
+
+  ledcAttachPin(en_pins[0], pwmChannel1);
+  ledcAttachPin(en_pins[1], pwmChannel2);
 
   pinMode(13, OUTPUT);
 
   setupWiFi();
   setupBLE();
+  digitalWrite(pins_op[4], HIGH);
 }
 
 void loop() {
@@ -187,10 +214,13 @@ void loop() {
   }
 
   if (isDeviceVerified) {
+    delay(200);
     esp_ble_gap_read_rssi(remoteDeviceAddress);
   }
 
   delay(1000);
+  digitalWrite(13, HIGH);
+  delay(500);
 }
 
-// {"device_id":"Lew-451a4279-a590-4a58-82bd-3c96adfd20a8","user_id":"69bee6eddc5b13efee73427b","token":"ce9dcd3e19a5e4eea320201a3d72e8272e4e68fbc7bc304a9d567272ef0b7d04"}
+// {"device_id":"Lew-e29b5802-f224-42f9-9a79-5a58c53747c4","user_id":"69d399da00bf726264a7512a","token":"12aa6df06d263b5b4a0019a8b1dc1f9f6494cc323db1ed08a5ff678e8307444b"}
