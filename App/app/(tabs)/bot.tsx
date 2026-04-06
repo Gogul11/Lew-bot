@@ -12,7 +12,8 @@ import { storageUtils } from "@/utils/storage";
 
 const ACCELEROMETER_UPDATE_INTERVAL_MS = 350;
 const MOTION_DELTA_THRESHOLD = 0.08;
-const MOVEMENT_WRITE_INTERVAL_MS = 3000;
+const MOTION_AVERAGE_SAMPLE_COUNT = 6;
+const MOVEMENT_WRITE_INTERVAL_MS = 1000;
 
 const extractBotIdFromQrData = (rawData: string) => {
   const cleaned = rawData.trim();
@@ -44,6 +45,7 @@ export default function BotScreen() {
   const [isBlePaired, setIsBlePaired] = useState(false);
   const [motionLevel, setMotionLevel] = useState(0);
   const [isMoving, setIsMoving] = useState(false);
+  const [averageMotionLevel, setAverageMotionLevel] = useState(0);
 
   const canScan = useMemo(() => Boolean(storedUser?.userId), [storedUser]);
 
@@ -61,15 +63,25 @@ export default function BotScreen() {
 
   useEffect(() => {
     let previousMagnitude = 0;
+    const recentDeltas: number[] = [];
 
     Accelerometer.setUpdateInterval(ACCELEROMETER_UPDATE_INTERVAL_MS);
     const subscription = Accelerometer.addListener(({ x, y, z }) => {
       const magnitude = Math.sqrt(x * x + y * y + z * z);
       const delta = Math.abs(magnitude - previousMagnitude);
       previousMagnitude = magnitude;
+      recentDeltas.push(delta);
+
+      if (recentDeltas.length > MOTION_AVERAGE_SAMPLE_COUNT) {
+        recentDeltas.shift();
+      }
+
+      const averageDelta =
+        recentDeltas.reduce((total, currentValue) => total + currentValue, 0) / recentDeltas.length;
 
       setMotionLevel(delta);
-      setIsMoving(delta > MOTION_DELTA_THRESHOLD);
+      setAverageMotionLevel(averageDelta);
+      setIsMoving(averageDelta > MOTION_DELTA_THRESHOLD);
     });
 
     return () => {
@@ -363,7 +375,10 @@ export default function BotScreen() {
             Motion level: {motionLevel.toFixed(3)}
           </Text>
           <Text className="mt-1 text-sm" style={{ color: lightTheme.colors.textMuted }}>
-            BLE update: {isBlePaired ? "Every 3 seconds" : "Pair to start"}
+            Average motion: {averageMotionLevel.toFixed(3)}
+          </Text>
+          <Text className="mt-1 text-sm" style={{ color: lightTheme.colors.textMuted }}>
+            BLE update: {isBlePaired ? "Every 1 second" : "Pair to start"}
           </Text>
         </View>
 

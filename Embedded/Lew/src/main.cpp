@@ -45,7 +45,7 @@ class ServerConnectionCallbacks : public BLEServerCallbacks {
 
     Serial.println("Device disconnected");
     Serial.println("To Access the Lew Send retrying the Codes");
-
+    isMoving = false;
     BLEDevice::startAdvertising();
     // digitalWrite(pins_op[4], HIGH);
   }
@@ -64,6 +64,7 @@ class ServerWriteCallbacks : public BLECharacteristicCallbacks {
       Serial.println(receivedData);
     }
   }
+
 };
 
 class movingUserCallbacks : public BLECharacteristicCallbacks {
@@ -77,13 +78,17 @@ class movingUserCallbacks : public BLECharacteristicCallbacks {
       Serial.print("Movement Command: ");
       Serial.println(data);
 
-      if (data == "1") {
-        isMoving = true;
-      } 
-      else if (data == "0") {
+      if (data == "0") {
         isMoving = false;
+      } 
+      else{
+        isMoving = true;
       }
     }
+  }
+
+  void onDisconnect(BLEServer* pServer){
+    isMoving = false;
   }
 };
 
@@ -102,7 +107,7 @@ void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
     Serial.println(speed);
 
     // Apply speed
-    if (!isMoving) {
+    if (isMoving) {
       ledcWrite(pwmChannel1, speed);
       ledcWrite(pwmChannel2, speed);
     } else {
