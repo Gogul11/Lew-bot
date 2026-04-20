@@ -8,6 +8,33 @@ LEW is a smart mobile robot that follows its assigned user using Bluetooth Low E
 
 The bot is designed around an `ESP32`, `L298N motor driver`, and `two DC motors`. The app is used for user authentication, QR-based bot selection, booking, pairing, and control. The ESP32 receives access data over BLE, verifies it with the backend over Wi-Fi, and then drives the motors based on RSSI strength so the bot can follow the user.
 
+## Demo Media
+
+### Mobile App Images
+
+<p style="display: flex; gap: 10px; overflow-x: auto;">
+  <img src="./images/mobile/img1.jpeg" width="200" height="350">
+  <img src="./images/mobile/img2.jpeg" width="200" height="350">
+  <img src="./images/mobile/img3.jpeg" width="200" height="350">
+  <img src="./images/mobile/img4.jpeg" width="200" height="350">
+  <img src="./images/mobile/img5.jpeg" width="200" height="350">
+  <img src="./images/mobile/img6.jpeg" width="200" height="350">
+</p>
+
+### Bot Images
+
+<p style="display: flex; gap: 10px; overflow-x: auto;">
+  <img src="./images/bot/img1.jpeg" width="250" height="300">
+  <img src="./images/bot/img2.jpeg" width="250" height="300">
+  <img src="./images/bot/img3.jpeg" width="250" height="300">
+  <img src="./images/bot/img4.jpeg" width="350" height="300">
+</p>
+
+### Demo Video
+
+[Watch Demo Video](/videos/demo.mp4)
+
+
 ## Project Flow
 
 The intended product flow is:
@@ -198,52 +225,6 @@ Important values in firmware:
 
 Then build and upload the firmware to the ESP32.
 
-## Current Implemented Features
-
-- User registration
-- User login
-- QR code scanning for bot identification
-- Bot booking
-- BLE pairing
-- Sending bot access data from app to ESP32
-- Backend verification of booking details
-- Bot release flow
-- RSSI based speed control
-- Separate control mode branches for button control and accelerometer control
-
-## Planned / Not Yet Implemented
-
-- Payment integration after QR scan
-- More production-ready bot assignment logic
-- Better deployment configuration for backend URLs and secrets
-- Polished media/demo assets in the repository
-
-## Demo Media
-
-### Mobile App Images
-
-<p style="display: flex; gap: 10px; overflow-x: auto;">
-  <img src="./images/mobile/img1.jpeg" width="200" height="350">
-  <img src="./images/mobile/img2.jpeg" width="200" height="350">
-  <img src="./images/mobile/img3.jpeg" width="200" height="350">
-  <img src="./images/mobile/img4.jpeg" width="200" height="350">
-  <img src="./images/mobile/img5.jpeg" width="200" height="350">
-  <img src="./images/mobile/img6.jpeg" width="200" height="350">
-</p>
-
-### Bot Images
-
-<p style="display: flex; gap: 10px; overflow-x: auto;">
-  <img src="./images/bot/img1.jpeg" width="250" height="300">
-  <img src="./images/bot/img2.jpeg" width="250" height="300">
-  <img src="./images/bot/img3.jpeg" width="250" height="300">
-  <img src="./images/bot/img4.jpeg" width="350" height="300">
-</p>
-
-### Demo Video
-
-[Watch Demo Video](/videos/demo.mp4)
-
 ## Example Verification Payload
 
 The ESP32 expects data in this format:
@@ -268,6 +249,25 @@ The ESP32 expects data in this format:
 - BLE
 - Wi-Fi
 - PlatformIO
+
+## Current Implemented Features
+
+- User registration
+- User login
+- QR code scanning for bot identification
+- Bot booking
+- BLE pairing
+- Sending bot access data from app to ESP32
+- Backend verification of booking details
+- Bot release flow
+- RSSI based speed control
+- Separate control mode branches for button control and accelerometer control
+
+## Planned / Not Yet Implemented
+
+- Payment integration after QR scan
+- More production-ready bot assignment logic
+- Better deployment configuration for backend URLs and secrets
 
 ## Summary
 
