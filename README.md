@@ -222,13 +222,18 @@ Then build and upload the firmware to the ESP32.
 
 ### Mobile App Images
 
-![Mobile Screen 1](/images/img1.png)
-![Mobile Screen 2](/images/img2.png)
-![Mobile Screen 3](/images/img3.png)
+<p style="display: flex; gap: 10px; overflow-x: auto;">
+  <img src="./images/mobile/img1.jpeg" width="150" height="300">
+  <img src="./images/mobile/img2.jpeg" width="150" height="300">
+  <img src="./images/mobile/img3.jpeg" width="150" height="300">
+  <img src="./images/mobile/img4.jpeg" width="150" height="300">
+  <img src="./images/mobile/img5.jpeg" width="150" height="300">
+  <img src="./images/mobile/img6.jpeg" width="150" height="300">
+</p>
 
 ### Bot Images
 
-![Bot Image 1](/images/bot1.png)
+![Bot Image 1](/images/mobile/img1.jpeg)
 ![Bot Image 2](/images/bot2.png)
 ![Bot Image 3](/images/bot3.png)
 
