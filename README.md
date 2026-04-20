@@ -223,19 +223,22 @@ Then build and upload the firmware to the ESP32.
 ### Mobile App Images
 
 <p style="display: flex; gap: 10px; overflow-x: auto;">
-  <img src="./images/mobile/img1.jpeg" width="150" height="300">
-  <img src="./images/mobile/img2.jpeg" width="150" height="300">
-  <img src="./images/mobile/img3.jpeg" width="150" height="300">
-  <img src="./images/mobile/img4.jpeg" width="150" height="300">
-  <img src="./images/mobile/img5.jpeg" width="150" height="300">
-  <img src="./images/mobile/img6.jpeg" width="150" height="300">
+  <img src="./images/mobile/img1.jpeg" width="200" height="350">
+  <img src="./images/mobile/img2.jpeg" width="200" height="350">
+  <img src="./images/mobile/img3.jpeg" width="200" height="350">
+  <img src="./images/mobile/img4.jpeg" width="200" height="350">
+  <img src="./images/mobile/img5.jpeg" width="200" height="350">
+  <img src="./images/mobile/img6.jpeg" width="200" height="350">
 </p>
 
 ### Bot Images
 
-![Bot Image 1](/images/mobile/img1.jpeg)
-![Bot Image 2](/images/bot2.png)
-![Bot Image 3](/images/bot3.png)
+<p style="display: flex; gap: 10px; overflow-x: auto;">
+  <img src="./images/bot/img1.jpeg" width="250" height="300">
+  <img src="./images/bot/img2.jpeg" width="250" height="300">
+  <img src="./images/bot/img3.jpeg" width="250" height="300">
+  <img src="./images/bot/img4.jpeg" width="350" height="300">
+</p>
 
 ### Demo Video
 
