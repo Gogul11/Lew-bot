@@ -11,8 +11,8 @@
 BLEServer* pServer;
 bool deviceConnected = false;
 
-const char* ssid = "Internet";
-const char* password = "qwerty1234";
+const char* ssid = "Wifi-Name";
+const char* password = "Password";
 
 esp_bd_addr_t remoteDeviceAddress;
 
@@ -21,15 +21,18 @@ bool dataReceived = false;
 bool isDeviceVerified = false;
 bool isMoving = false;
 
+//Motor pins and led pins 
 int pins_op[6] = {27, 26, 25, 33, 32, 35};
 int motor_pins[4] = {19, 21, 22, 23};
 int en_pins[2] = {2, 4};
 
+//Controlling the speed of the motor
 const int pwmChannel1 = 0;
 const int pwmChannel2 = 1;
 const int freq = 5000;
 const int resolution = 8;
 
+//Callback for BLE server BLE Client Connection
 class ServerConnectionCallbacks : public BLEServerCallbacks {
 
   void onConnect(BLEServer* pServer, esp_ble_gatts_cb_param_t *param) {
@@ -51,6 +54,7 @@ class ServerConnectionCallbacks : public BLEServerCallbacks {
   }
 };
 
+//Callback for Verfication 
 class ServerWriteCallbacks : public BLECharacteristicCallbacks {
 
   void onWrite(BLECharacteristic *pCharacteristic) {
@@ -67,6 +71,7 @@ class ServerWriteCallbacks : public BLECharacteristicCallbacks {
 
 };
 
+//Callback for Movement of the bot
 class movingUserCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
     std::string value = pCharacteristic->getValue();
@@ -170,7 +175,7 @@ void sendToServer(String jsonData) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
 
-    http.begin("http://10.16.34.176:5000/bots/verifyBot");
+    http.begin("http://<Your-IP>:5000/bots/verifyBot");
     http.addHeader("Content-Type", "application/json");
 
     int httpResponseCode = http.POST(jsonData);
@@ -261,5 +266,7 @@ void loop() {
   digitalWrite(13, HIGH);
   delay(500);
 }
+
+//Example verification details
 
 // {"device_id":"Lew-e29b5802-f224-42f9-9a79-5a58c53747c4","user_id":"69d399da00bf726264a7512a","token":"12aa6df06d263b5b4a0019a8b1dc1f9f6494cc323db1ed08a5ff678e8307444b"}
