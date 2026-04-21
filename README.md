@@ -32,7 +32,7 @@ The bot is designed around an `ESP32`, `L298N motor driver`, and `two DC motors`
 
 ### Demo Video
 
-[Watch Demo Video](/videos/demo.mp4)
+[Watch Demo Video](/images/test.mp4)
 
 
 ## Project Flow
